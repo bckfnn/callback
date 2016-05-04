@@ -56,6 +56,25 @@ public class CallbackTest {
     }
 
     @Test
+    public void runOk2() {
+        events.add("start");
+        subRunOk2((v, e) -> {
+            events.add("end");
+            events.add(v);
+        });
+
+        Assert.assertEquals(Arrays.asList("start", "continue", "ok", "end", 2l), events);
+    }
+
+    private void subRunOk2(Callback<Long> cb) {
+        runOk(cb.call(t -> {
+            events.add("continue");
+            events.add(t);
+            cb.ok(2l);
+        }));
+    }
+
+    @Test
     public void runFail() {
         events.add("start");
         runFail((t, e) -> {
@@ -66,29 +85,11 @@ public class CallbackTest {
     }
 
 
-    @Test
-    public void runOk2() {
-        events.add("start");
-        ok2((v, e) -> {
-            events.add("end");
-            events.add(v);
-        });
-
-        Assert.assertEquals(Arrays.asList("start", "continue", "ok", "end", 2l), events);
-    }
-
-    private void ok2(Callback<Long> cb) {
-        runOk(cb.call(t -> {
-            events.add("continue");
-            events.add(t);
-            cb.ok(2l);
-        }));
-    }
 
     @Test
     public void runFail2() {
         events.add("start");
-        fail2((v, e) -> {
+        subRunFail2((v, e) -> {
             events.add("end");
             events.add(e.getMessage());
         });
@@ -96,10 +97,28 @@ public class CallbackTest {
         Assert.assertEquals(Arrays.asList("start", "end", "error"), events);
     }
 
-    private void fail2(Callback<Long> cb) {
+    private void subRunFail2(Callback<Long> cb) {
         runFail(cb.call(t -> {
             events.add("continue");
             events.add(t);
+        }));
+    }
+
+    @Test
+    public void runFail3() {
+        events.add("start");
+        subRunFail3((v, e) -> {
+            events.add("end");
+            events.add(e.getMessage());
+        });
+
+        Assert.assertEquals(Arrays.asList("start", "ok", "end", "rt"), events);
+    }
+
+    private void subRunFail3(Callback<Long> cb) {
+        runOk(cb.call(t -> {
+            events.add(t);
+            throw new RuntimeException("rt");
         }));
     }
 
@@ -111,6 +130,9 @@ public class CallbackTest {
         cb.fail(new Error("error"));
     }
 
+    public void runThrow(Callback<Void> cb) {
+        throw new RuntimeException("rt");
+    }
 
     @Test
     public void forEachList1() {

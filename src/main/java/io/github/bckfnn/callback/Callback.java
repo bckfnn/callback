@@ -31,7 +31,11 @@ public interface Callback<T> {
             if (e != null) {
                 call(null, e);
             } else {
-                handler.accept(t);
+                try {
+                    handler.accept(t);
+                } catch (Throwable exc) {
+                    call(null, exc);
+                }
             }
         };
     }
