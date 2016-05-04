@@ -73,15 +73,15 @@ public interface Callback<T> {
             @Override
             public void call(Void $, Throwable e) {
                 depth++;
-                System.out.println("forEach call:" + cnt + " " + completed + " " + depth);
+                //System.out.println("forEach call:" + cnt + " " + completed + " " + depth);
                 if (e != null) {
-                    System.out.println("forEach stopped");
+                    //System.out.println("forEach stopped");
                     fail(e);
                     return;
                 }
                 if (depth == 1) {
                     while (true) {
-                        System.out.println("forEach loop:" + cnt + " " + completed);
+                        //System.out.println("forEach loop:" + cnt + " " + completed);
                         int i = cnt.get();
                         if (i >= list.size()) {
                             if (completed != null && i == completed.get()) {
@@ -93,7 +93,7 @@ public interface Callback<T> {
                         }
 
                         cnt.incrementAndGet();
-                        System.out.println("forEach accept");
+                        //System.out.println("forEach accept");
                         x.accept(list.get(i), this);
                         if (completed == null || cnt.get() > completed.get()) {
                             break;
@@ -101,7 +101,7 @@ public interface Callback<T> {
 
                     }
                 }
-                System.out.println("forEach exit:" + cnt + " " + completed);
+                //System.out.println("forEach exit:" + cnt + " " + completed);
                 depth--;
             }
 
@@ -120,43 +120,4 @@ public interface Callback<T> {
         };
         h.call(null, null);
     }
-    /*
-    class NextCallback implements Callback<Void> {
-        AtomicInteger cnt = new AtomicInteger(0);
-        AtomicInteger completed = new AtomicInteger(0);
-
-        @Override
-        public void call(Void result, Throwable error) {
-            System.out.println("forEach call:" + cnt.get() + " " + completed.get());
-            if (e != null) {
-                System.out.println("forEach stopped");
-                fail(e);
-                return;
-            }
-            while (true) {
-                System.out.println("forEach loop:" + cnt.get() + " " + completed.get());
-                int i = cnt.get();
-                if (i >= list.size()) {
-                    if (i == completed.get()) {
-                        done.accept(null);
-                    }
-                    //log.trace("forEach.done {} items", list.size());
-                    break;
-                }
-
-                if (cnt.get() < completed.get()) {
-                    break;
-                }
-                x.accept(list.get(i), this);
-                cnt.incrementAndGet();
-
-            }
-            System.out.println("forEach exit:" + cnt.get() + " " + completed.get());
-        }
-
-        }
-
-    }
-    */
-
 }

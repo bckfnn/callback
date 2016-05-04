@@ -171,7 +171,6 @@ public class CallbackTest {
 
         subForEachList4(data, (v, e) -> {
             events.add("done");
-            System.out.println(events);
             Assert.assertEquals(103, events.size());
             count.countDown();
         });
