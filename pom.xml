@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.bckfnn</groupId>
     <artifactId>callback</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>Callback helpers for vertx</name>
@@ -15,6 +15,14 @@
         <vertx.version>3.2.1</vertx.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>bintray-bckfnn-maven</id>
+            <name>bckfnn-maven</name>
+            <url>https://api.bintray.com/maven/bckfnn/maven/callback/;publish=1</url>
+        </repository>
+    </distributionManagement>
+    
     <dependencies>
         <dependency>
             <groupId>io.vertx</groupId>
