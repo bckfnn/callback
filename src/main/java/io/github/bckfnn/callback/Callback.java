@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.bckfnn.callback;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import io.vertx.core.AsyncResult;
@@ -55,6 +57,33 @@ public interface Callback<T> {
 
     default void fail(Throwable error) {
         call(null, error);
+    }
+
+
+    default <E> void forEach(List<E> list, BiConsumer<E, Callback<Void>> x) {
+        forEach(list, x, this::ok);
+    }
+
+    default <E> void forEach(List<E> list, BiConsumer<E, Callback<Void>> x, Consumer<T> done) {
+        AtomicInteger cnt = new AtomicInteger(0);
+        Callback<Void> h = new Callback<Void>() {
+            @Override
+            public void call(Void $, Throwable e) {
+                if (e != null) {
+                    System.out.println("forEach stopped");
+                    fail(e);
+                    return;
+                }
+                int i = cnt.getAndIncrement();
+                if (i >= list.size()) {
+                    //log.trace("forEach.done {} items", list.size());
+                    done.accept(null);
+                } else {
+                    x.accept(list.get(i), this);
+                }
+            }
+        };
+        h.call(null, null);
     }
 
 }
