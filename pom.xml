@@ -22,7 +22,7 @@
             <url>https://api.bintray.com/maven/bckfnn/maven/callback/;publish=1</url>
         </repository>
     </distributionManagement>
-    
+
     <dependencies>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -69,6 +69,20 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
