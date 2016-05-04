@@ -153,14 +153,14 @@ public class CallbackTest {
 
     @Test
     public void forEachList3() {
-        List<String> data = data(10000);
+        List<String> data = data(5000);
 
         events.add("start");
 
         subForEachList2(data, (v, e) -> {
             events.add("done");
         });
-        Assert.assertEquals(10003, events.size());
+        Assert.assertEquals(5003, events.size());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class CallbackTest {
 
     private void subForEachList4(List<String> data, Callback<Void> cb) {
         cb.forEach(data, (elm, h) -> {
-            vertx.setTimer(10, l -> {
+            vertx.setTimer(5, l -> {
                 events.add(elm);
                 h.ok();
             });
