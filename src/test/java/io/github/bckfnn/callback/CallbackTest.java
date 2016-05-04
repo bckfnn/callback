@@ -18,13 +18,30 @@ package io.github.bckfnn.callback;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.Vertx;
 
 
 public class CallbackTest {
     List<Object> events = new ArrayList<>();
+    CountDownLatch count = new CountDownLatch(1);
+    static Vertx vertx;
+
+    @BeforeClass
+    public static void before() {
+        vertx = Vertx.vertx();
+    }
+
+    @AfterClass
+    public static void after() {
+        vertx.close();
+    }
 
     @Test
     public void runOk1() {
@@ -132,5 +149,53 @@ public class CallbackTest {
             events.add("end");
             cb.ok();
         });
+    }
+
+    @Test
+    public void forEachList3() {
+        List<String> data = data(10000);
+
+        events.add("start");
+
+        subForEachList2(data, (v, e) -> {
+            events.add("done");
+        });
+        Assert.assertEquals(10003, events.size());
+    }
+
+    @Test
+    public void forEachList4() throws InterruptedException {
+        List<String> data = data(100);
+
+        events.add("start");
+
+        subForEachList4(data, (v, e) -> {
+            events.add("done");
+            System.out.println(events);
+            Assert.assertEquals(103, events.size());
+            count.countDown();
+        });
+        count.await();
+    }
+
+    private void subForEachList4(List<String> data, Callback<Void> cb) {
+        cb.forEach(data, (elm, h) -> {
+            vertx.setTimer(10, l -> {
+                events.add(elm);
+                h.ok();
+            });
+        }, $ -> {
+            events.add("end");
+            cb.ok();
+        });
+    }
+
+
+    private List<String> data(int cnt) {
+        List<String> data = new ArrayList<>();
+        for (int i = 0; i < cnt; i++) {
+            data.add("d" + i);
+        }
+        return data;
     }
 }

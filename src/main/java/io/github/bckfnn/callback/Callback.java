@@ -65,25 +65,98 @@ public interface Callback<T> {
     }
 
     default <E> void forEach(List<E> list, BiConsumer<E, Callback<Void>> x, Consumer<T> done) {
-        AtomicInteger cnt = new AtomicInteger(0);
         Callback<Void> h = new Callback<Void>() {
+            AtomicInteger cnt = new AtomicInteger(0);
+            AtomicInteger completed = new AtomicInteger(0);
+            int depth;
+
             @Override
             public void call(Void $, Throwable e) {
+                depth++;
+                System.out.println("forEach call:" + cnt + " " + completed + " " + depth);
                 if (e != null) {
                     System.out.println("forEach stopped");
                     fail(e);
                     return;
                 }
-                int i = cnt.getAndIncrement();
-                if (i >= list.size()) {
-                    //log.trace("forEach.done {} items", list.size());
-                    done.accept(null);
-                } else {
-                    x.accept(list.get(i), this);
+                if (depth == 1) {
+                    while (true) {
+                        System.out.println("forEach loop:" + cnt + " " + completed);
+                        int i = cnt.get();
+                        if (i >= list.size()) {
+                            if (completed != null && i == completed.get()) {
+                                completed = null;
+                                done.accept(null);
+                            }
+                            //log.trace("forEach.done {} items", list.size());
+                            break;
+                        }
+
+                        cnt.incrementAndGet();
+                        System.out.println("forEach accept");
+                        x.accept(list.get(i), this);
+                        if (completed == null || cnt.get() > completed.get()) {
+                            break;
+                        }
+
+                    }
                 }
+                System.out.println("forEach exit:" + cnt + " " + completed);
+                depth--;
             }
+
+            @Override
+            public void ok(Void t) {
+                completed.incrementAndGet();
+                Callback.super.ok(t);
+            }
+
+            @Override
+            public void ok() {
+                completed.incrementAndGet();
+                Callback.super.ok();
+            }
+
         };
         h.call(null, null);
     }
+    /*
+    class NextCallback implements Callback<Void> {
+        AtomicInteger cnt = new AtomicInteger(0);
+        AtomicInteger completed = new AtomicInteger(0);
+
+        @Override
+        public void call(Void result, Throwable error) {
+            System.out.println("forEach call:" + cnt.get() + " " + completed.get());
+            if (e != null) {
+                System.out.println("forEach stopped");
+                fail(e);
+                return;
+            }
+            while (true) {
+                System.out.println("forEach loop:" + cnt.get() + " " + completed.get());
+                int i = cnt.get();
+                if (i >= list.size()) {
+                    if (i == completed.get()) {
+                        done.accept(null);
+                    }
+                    //log.trace("forEach.done {} items", list.size());
+                    break;
+                }
+
+                if (cnt.get() < completed.get()) {
+                    break;
+                }
+                x.accept(list.get(i), this);
+                cnt.incrementAndGet();
+
+            }
+            System.out.println("forEach exit:" + cnt.get() + " " + completed.get());
+        }
+
+        }
+
+    }
+    */
 
 }
