@@ -65,6 +65,8 @@ public interface Callback<T> {
     }
 
     default <E> void forEach(List<E> list, BiConsumer<E, Callback<Void>> x, Consumer<T> done) {
+        Callback<T> thiz = this;
+
         Callback<Void> h = new Callback<Void>() {
             AtomicInteger cnt = new AtomicInteger(0);
             AtomicInteger completed = new AtomicInteger(0);
@@ -76,7 +78,7 @@ public interface Callback<T> {
                 //System.out.println("forEach call:" + cnt + " " + completed + " " + depth);
                 if (e != null) {
                     //System.out.println("forEach stopped");
-                    fail(e);
+                    thiz.fail(e);
                     return;
                 }
                 if (depth == 1) {

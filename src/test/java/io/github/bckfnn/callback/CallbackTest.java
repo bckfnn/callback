@@ -189,6 +189,34 @@ public class CallbackTest {
         });
     }
 
+    @Test
+    public void forEachList5() throws InterruptedException {
+        events.add("start");
+
+        subForEachList5((v, e) -> {
+            events.add(e.getMessage());
+            Assert.assertEquals(Arrays.asList("start", "d0", "d1", "d2", "stop"), events);
+            count.countDown();
+        });
+        count.await();
+    }
+
+    private void subForEachList5(Callback<Void> cb) {
+        cb.forEach(data(10), (elm, h) -> {
+            vertx.setTimer(5, l -> {
+                events.add(elm);
+                if (elm.equals("d2")) {
+                    h.fail(new RuntimeException("stop"));
+                } else {
+                    h.ok();
+                }
+            });
+        }, $ -> {
+            events.add("end");
+            cb.ok();
+        });
+    }
+
 
     private List<String> data(int cnt) {
         List<String> data = new ArrayList<>();
