@@ -17,11 +17,14 @@ package io.github.bckfnn.callback;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.streams.ReadStream;
 
 /**
  * A funtional interface that can signal a success value or a failure condition.
@@ -36,6 +39,15 @@ public interface Callback<T> {
      */
     public void call(T result, Throwable error);
 
+    public static <R> Callback<R> callback(Handler<AsyncResult<R>> handler) {
+        return (result, error) -> {
+            if (error != null) {
+                handler.handle(Future.failedFuture(error));
+            } else {
+                handler.handle(Future.succeededFuture(result));
+            }
+        };
+    }
     /**
      * Return a new callback where the handler is invoked on success and a error condition is passed to this callback.
      * @param handler the handler to call on success.
@@ -218,5 +230,48 @@ public interface Callback<T> {
 
         };
         h.call(null, null);
+    }
+    
+    default <E> void forEach(ReadStream<E> readStream, BiConsumer<E, Callback<Void>> elmHandler, Consumer<T> done) {
+        readStream.exceptionHandler(error -> {
+            fail(error);
+        });
+        readStream.endHandler($ -> {
+            done.accept(null);
+        });
+        readStream.handler(elm -> {
+            readStream.pause();
+            elmHandler.accept(elm, ((v, e) -> {
+                if (e != null) {
+                    fail(e);
+                    return;
+                }
+                readStream.resume();
+            }));
+        });
+    }
+    
+    default <E> CallbackReadStream<E> one(Consumer<E> consumer) {
+        AtomicReference<E> value = new AtomicReference<>();
+        return rs -> {
+            rs.endHandler($ -> {
+                if (value.get() != null) {
+                    consumer.accept(value.get());
+                } else {
+                    fail(new RuntimeException("value missing"));
+                }
+            });
+            rs.exceptionHandler(err -> {
+                fail(err);
+            });
+            rs.handler(val -> {
+                if (value.get() == null) {
+                    value.set(val);
+                } else {
+                    rs.pause();
+                    fail(new RuntimeException("multiple values"));
+                }
+            });
+        };
     }
 }
